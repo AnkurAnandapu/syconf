@@ -14,7 +14,6 @@ pub fn method(method_name: &str) -> Option<&'static StringMethod> {
         "contains" => &contains,
         "starts_with" => &starts_with,
         "ends_with" => &ends_with,
-        "lines" => &lines,
         "unindent" => &unindent,
         _ => return None,
     })
