@@ -11,6 +11,10 @@ pub fn method(method_name: &str) -> Option<&'static StringMethod> {
         "parse_yaml" => &parse_yaml,
         "parse_toml" => &parse_toml,
         "trim" => &trim,
+        "contains" => &contains,
+        "starts_with" => &starts_with,
+        "ends_with" => &ends_with,
+        "lines" => &lines,
         "unindent" => &unindent,
         _ => return None,
     })
@@ -37,6 +41,63 @@ fn parse_toml(string: &str, args: &[Value]) -> Result<Value, Error> {
 fn trim(string: &str, args: &[Value]) -> Result<Value, Error> {
     check!(args.is_empty(), "'trim' does not take any arguments");
     Ok(Value::String(string.trim().into()))
+}
+
+fn contains(string: &str, args: &[Value]) -> Result<Value, Error> {
+    check!(args.len() == 1, "'contains' takes exactly one argument");
+    let word_to_check = args[0].as_value_string()?.to_string();
+    Ok(Value::Bool(string.contains(&word_to_check)).into())
+}
+
+#[test]
+fn string_contains() {
+    assert_eq!(
+        crate::parse_string(
+            r#"
+            "hello".contains("ll") == true
+            "#
+        )
+        .unwrap(),
+        Value::Bool(true)
+    )
+}
+
+fn starts_with(string: &str, args: &[Value]) -> Result<Value, Error> {
+    check!(args.len() == 1, "'starts_with' takes exactly one argument");
+    let word_to_check = args[0].as_value_string()?.to_string();
+    Ok(Value::Bool(string.starts_with(&word_to_check)).into())
+}
+
+#[test]
+fn string_starts_with() {
+    assert_eq!(
+        crate::parse_string(
+            r#"
+            "hello".starts_with("he") == true
+            "#
+        )
+        .unwrap(),
+        Value::Bool(true)
+    )
+}
+
+fn ends_with(string: &str, args: &[Value]) -> Result<Value, Error> {
+    check!(args.len() == 1, "'ends_with' takes exactly one argument");
+    let word_to_check = args[0].as_value_string()?.to_string();
+    Ok(Value::Bool(string.ends_with(&word_to_check)).into())
+}
+
+#[test]
+fn string_ends_with() {
+    assert_eq!(
+        crate::parse_string(
+            r#"
+            "hello".ends_with("lo") == true
+            "#
+        )
+        .unwrap(),
+        Value::Bool(true)
+    )
 }
 
 #[test]
