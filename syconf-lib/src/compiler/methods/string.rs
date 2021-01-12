@@ -1,7 +1,7 @@
+use std::cmp::min;
 use std::rc::Rc;
 
 use crate::compiler::{Error, Value};
-use std::cmp::min;
 
 pub type StringMethod = dyn Fn(&str, &[Value]) -> Result<Value, Error>;
 
@@ -15,6 +15,7 @@ pub fn method(method_name: &str) -> Option<&'static StringMethod> {
         "starts_with" => &starts_with,
         "ends_with" => &ends_with,
         "unindent" => &unindent,
+        "lines" => &lines,
         _ => return None,
     })
 }
@@ -35,11 +36,6 @@ fn parse_toml(string: &str, args: &[Value]) -> Result<Value, Error> {
     check!(args.is_empty(), "'parse_toml' does not take any arguments");
     let x = toml::de::from_str(string).map_err(|e| anyhow!("cannot parse TOML: {}", e))?;
     Ok(Value::HashMap(Rc::new(x)))
-}
-
-fn trim(string: &str, args: &[Value]) -> Result<Value, Error> {
-    check!(args.is_empty(), "'trim' does not take any arguments");
-    Ok(Value::String(string.trim().into()))
 }
 
 fn contains(string: &str, args: &[Value]) -> Result<Value, Error> {
@@ -97,6 +93,34 @@ fn string_ends_with() {
         .unwrap(),
         Value::Bool(true)
     )
+}
+
+fn lines(string: &str, args: &[Value]) -> Result<Value, Error> {
+    check!(args.is_empty(), "'lines' takes no arguments");
+    let word_to_check = string
+        .lines()
+        .map(|x| Value::String(x.clone().into()))
+        .collect::<Vec<Value>>();
+    Ok(Value::List(word_to_check.into()))
+}
+
+#[test]
+fn string_lines() {
+    assert_eq!(
+        crate::parse_string(
+            r#"
+            "hello
+llo".lines() == ["hello", "llo"]
+            "#
+        )
+        .unwrap(),
+        Value::Bool(true)
+    )
+}
+
+fn trim(string: &str, args: &[Value]) -> Result<Value, Error> {
+    check!(args.is_empty(), "'trim' does not take any arguments");
+    Ok(Value::String(string.trim().into()))
 }
 
 #[test]
